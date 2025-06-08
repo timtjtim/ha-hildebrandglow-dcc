@@ -188,7 +188,7 @@ async def daily_data(hass: HomeAssistant, resource) -> float:
             resource.get_readings, t_from, t_to, "P1D", "sum", True
         )
         _LOGGER.debug("Successfully got daily usage for resource id %s", resource.id)
-        #Using the new logic above, there should only ever be one reading (not two, where the days > 1 based upon times)
+        # Using the new logic above, there should only ever be one reading (not two, where the days > 1 based upon times), but there is, and there are also time there are zero returns (just after midnight)
         _LOGGER.debug("Readings for %s has %s entries", resource.classifier, len(readings))
         if len(readings) == 0:
             v = 0
