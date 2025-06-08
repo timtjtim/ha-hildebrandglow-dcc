@@ -151,19 +151,6 @@ async def daily_data(hass: HomeAssistant, resource) -> float:
     """Get daily usage from the API."""
     # If it's before 01:06, we need to fetch yesterday's data
     # Should only need to be before 00:36 but gas data can be 30 minutes behind electricity data
-    #if datetime.now(tz).time() <= time(1, 5):
-    #    _LOGGER.debug("Fetching yesterday's data")
-    #    now = datetime.now(tz) - timedelta(days=1)
-    #else:
-    #    now = datetime.now(tz)
-    # Use Jons idea to ask for sum for entire day each time.
-    #todaystart = datetime.combine(datetime.today(), time.min)
-    #endoftoday = todaystart + timedelta(hours=23) + timedelta(minutes=59)
-    # Round to the day to set time to 00:00:00
-    #t_from = await hass.async_add_executor_job(resource.round, todaystart, "P1D")
-    # Round to the minute
-    #t_to = await hass.async_add_executor_job(resource.round, endoftoday, "PT1M")
-    #_LOGGER.debug("To %s and From %s", t_to, t_from)
     if datetime.now(tz).time() <= time(1, 5):
         _LOGGER.debug("Fetching yesterday's data")
         now = datetime.now(tz) - timedelta(days=1)
