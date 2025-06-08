@@ -7,6 +7,12 @@ import logging
 
 import requests
 
+# import timezone
+from pytz import timezone
+
+# define a tz variable
+tz = timezone("Europe/London")
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -134,9 +140,9 @@ def device_name(resource, virtual_entity) -> str:
 
 
 async def should_update() -> bool:
-    """Check if time is between 0-5 or 30-35 minutes past the hour."""
+    """Check if time is between 1-5 or 30-35 minutes past the hour."""
     minutes = datetime.now().minute
-    if (0 <= minutes <= 5) or (30 <= minutes <= 35):
+    if (1 <= minutes <= 5) or (30 <= minutes <= 35):
         return True
     return False
 
@@ -145,15 +151,29 @@ async def daily_data(hass: HomeAssistant, resource) -> float:
     """Get daily usage from the API."""
     # If it's before 01:06, we need to fetch yesterday's data
     # Should only need to be before 00:36 but gas data can be 30 minutes behind electricity data
-    if datetime.now().time() <= time(1, 5):
+    #if datetime.now(tz).time() <= time(1, 5):
+    #    _LOGGER.debug("Fetching yesterday's data")
+    #    now = datetime.now(tz) - timedelta(days=1)
+    #else:
+    #    now = datetime.now(tz)
+    # Use Jons idea to ask for sum for entire day each time.
+    #todaystart = datetime.combine(datetime.today(), time.min)
+    #endoftoday = todaystart + timedelta(hours=23) + timedelta(minutes=59)
+    # Round to the day to set time to 00:00:00
+    #t_from = await hass.async_add_executor_job(resource.round, todaystart, "P1D")
+    # Round to the minute
+    #t_to = await hass.async_add_executor_job(resource.round, endoftoday, "PT1M")
+    #_LOGGER.debug("To %s and From %s", t_to, t_from)
+    if datetime.now(tz).time() <= time(1, 5):
         _LOGGER.debug("Fetching yesterday's data")
-        now = datetime.now() - timedelta(days=1)
+        now = datetime.now(tz) - timedelta(days=1)
     else:
-        now = datetime.now()
+        now = datetime.now(tz)
     # Round to the day to set time to 00:00:00
     t_from = await hass.async_add_executor_job(resource.round, now, "P1D")
     # Round to the minute
     t_to = await hass.async_add_executor_job(resource.round, now, "PT1M")
+    _LOGGER.debug("To %s and From %s", t_to, t_from)
 
     # Tell Hildebrand to pull latest DCC data
     try:
@@ -176,19 +196,21 @@ async def daily_data(hass: HomeAssistant, resource) -> float:
             _LOGGER.exception("Unexpected exception: %s. Please open an issue", ex)
 
     try:
-        _LOGGER.debug(
-            "Get readings from %s to %s for %s", t_from, t_to, resource.classifier
-        )
+        _LOGGER.debug("Get readings from %s to %s for %s", t_from, t_to, resource.classifier)
         readings = await hass.async_add_executor_job(
             resource.get_readings, t_from, t_to, "P1D", "sum", True
         )
         _LOGGER.debug("Successfully got daily usage for resource id %s", resource.id)
-        _LOGGER.debug(
-            "Readings for %s has %s entries", resource.classifier, len(readings)
-        )
-        v = readings[0][1].value
+        #Using the new logic above, there should only ever be one reading (not two, where the days > 1 based upon times)
+        _LOGGER.debug("Readings for %s has %s entries", resource.classifier, len(readings))
+        if len(readings) == 0:
+            v = 0
+        else:
+            v = readings[0][1].value
+        _LOGGER.debug("%s reading 0,1 value %s", resource.classifier, v)
         if len(readings) > 1:
-            v += readings[1][1].value
+            _LOGGER.debug("%s reading 1,1 value %s", resource.classifier, readings[1][1].value)
+            v +=  readings[1][1].value
         return v
     except requests.Timeout as ex:
         _LOGGER.error("Timeout: %s", ex)
@@ -243,7 +265,7 @@ class Usage(SensorEntity):
     _attr_has_entity_name = True
     _attr_name = "Usage (today)"
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL
 
     def __init__(self, hass: HomeAssistant, resource, virtual_entity) -> None:
         """Initialize the sensor."""
@@ -294,7 +316,7 @@ class Cost(SensorEntity):
     _attr_has_entity_name = True
     _attr_name = "Cost (today)"
     _attr_native_unit_of_measurement = "GBP"
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL
 
     def __init__(self, hass: HomeAssistant, resource, virtual_entity) -> None:
         """Initialize the sensor."""
