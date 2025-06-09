@@ -124,7 +124,7 @@ def supply_type(resource) -> str:
         return "electricity"
     if "gas.consumption" in resource.classifier:
         return "gas"
-    _LOGGER.error("Unknown classifier: %s. Please open an issue", resource.classifier)
+        _LOGGER.error("Unknown classifier: %s. Please open an issue", resource.classifier)
     return "unknown"
 
 
