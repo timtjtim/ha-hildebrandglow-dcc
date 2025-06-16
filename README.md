@@ -2,20 +2,11 @@
 
 Home Assistant integration for energy consumption data from UK SMETS (Smart) meters using the Hildebrand Glow API.
 
-The original of this project is now declared as abandoned, so after the local tweaks Ive been making over the last 24 months, and into the future, I decided to create my own fork.
-
 ## Installation
 
-### Automated installation through HACS
+### Custom Repository
 
-You can install this component through [HACS](https://hacs.xyz/) to easily receive updates. Once HACS is installed, click this link:
-
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=timtjtim&repository=ha-hildebrandglow-dcc)
-
-<details>
-  <summary>Manually add to HACS</summary>
-  Visit the HACS Integrations pane and go to <i>Explore and download repositories</i>. Search for <code>Hildebrand Glow (DCC)</code>, and then hit <i>Download</i>. You'll then be able to install it through the <i>Integrations</i> pane.
-</details>
+TBC
 
 ### Manual installation
 
